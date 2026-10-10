@@ -1,12 +1,12 @@
-# Portpeek
+# port-check
 
-Portpeek checks whether TCP connections to `host:port` endpoints can be established. It is a single static Go binary with no dependencies beyond the Go standard library, intended for local troubleshooting, shell scripts and CI/CD pipelines.
+port-check checks whether TCP connections to `host:port` endpoints can be established. It is a single static Go binary with no dependencies beyond the Go standard library, intended for local troubleshooting, shell scripts and CI/CD pipelines.
 
 ## What it does and does not do
 
-Portpeek resolves the host, opens a TCP connection, measures how long that took, and closes the connection immediately. It reports one of five results (see [Results](#results)).
+port-check resolves the host, opens a TCP connection, measures how long that took, and closes the connection immediately. It reports one of five results (see [Results](#results)).
 
-A successful result means a TCP handshake completed. It does **not** mean the application behind the port is healthy, that TLS is configured correctly, or that requests will succeed. Portpeek sends no data.
+A successful result means a TCP handshake completed. It does **not** mean the application behind the port is healthy, that TLS is configured correctly, or that requests will succeed. port-check sends no data.
 
 Not implemented: port range scanning, UDP, HTTP or other application-level checks, monitoring or background operation, persistent storage.
 
@@ -15,15 +15,15 @@ Not implemented: port range scanning, UDP, HTTP or other application-level check
 Requires Go 1.24 or newer.
 
 ```bash
-git clone <repository-url> portpeek
-cd portpeek
-go build -o portpeek .
+git clone <repository-url> port-check
+cd port-check
+go build -o port-check .
 ```
 
-On Windows the output file should be named `portpeek.exe`:
+On Windows the output file should be named `port-check.exe`:
 
 ```powershell
-go build -o portpeek.exe .
+go build -o port-check.exe .
 ```
 
 Run the tests with `go test ./...`.
@@ -31,40 +31,40 @@ Run the tests with `go test ./...`.
 ## Usage
 
 ```
-portpeek [options] <host:port>
-portpeek [options] check <config-file>
+port-check [options] <host:port>
+port-check [options] check <config-file>
 ```
 
 Options:
 
-| Option | Description |
-| --- | --- |
+| Option                 | Description                                                                                         |
+| ---------------------- | --------------------------------------------------------------------------------------------------- |
 | `--timeout <duration>` | Connection timeout, e.g. `500ms`, `3s`, `1m`. Default `5s`. Overrides the timeout in a config file. |
-| `--json` | Print results as JSON on stdout. |
-| `--version` | Print the version and exit. |
-| `-h`, `--help` | Print usage and exit. |
+| `--json`               | Print results as JSON on stdout.                                                                    |
+| `--version`            | Print the version and exit.                                                                         |
+| `-h`, `--help`         | Print usage and exit.                                                                               |
 
 Options may appear before or after the target. Use `--` to end option parsing. Durations need a unit (`5` is rejected, `5s` is accepted) and must be greater than zero.
 
 ### Single endpoint
 
 ```console
-$ portpeek localhost:8080
+$ port-check localhost:8080
 open  localhost:8080  0.8ms
 
-$ portpeek 127.0.0.1:9
+$ port-check 127.0.0.1:9
 refused  127.0.0.1:9  0.2ms  connection refused
 
-$ portpeek --timeout 3s no-such-host.invalid:443
+$ port-check --timeout 3s no-such-host.invalid:443
 dns_error  no-such-host.invalid:443  1.1ms  dial tcp: lookup no-such-host.invalid on 8.8.8.8:53: no such host
 ```
 
-IPv6 literals need brackets: `portpeek "[::1]:8080"`. Ports must be numeric (1-65535); service names such as `http` are not supported.
+IPv6 literals need brackets: `port-check "[::1]:8080"`. Ports must be numeric (1-65535); service names such as `http` are not supported.
 
 ### Multiple endpoints
 
 ```console
-$ portpeek check targets.yaml
+$ port-check check targets.yaml
 open       Local API    localhost:8080            0.3ms
 refused    Closed port  127.0.0.1:9               0.1ms  connection refused
 dns_error  Bad host     no-such-host.invalid:443  1.1ms  dial tcp: lookup no-such-host.invalid on 8.8.8.8:53: no such host
@@ -75,7 +75,7 @@ Checks run concurrently, at most 16 at a time. Output always follows the order o
 
 ## Configuration file
 
-The `check` command reads a small subset of YAML. Portpeek does not use a YAML library, so only the constructs below are supported.
+The `check` command reads a small subset of YAML. port-check does not use a YAML library, so only the constructs below are supported.
 
 ```yaml
 targets:
@@ -101,19 +101,19 @@ Rules:
 Errors include the file name and line number:
 
 ```console
-$ portpeek check bad.yaml
-portpeek: bad.yaml:2: target #1 is missing required field 'address'
+$ port-check check bad.yaml
+port-check: bad.yaml:2: target #1 is missing required field 'address'
 ```
 
 ## Results
 
-| Status | Meaning |
-| --- | --- |
-| `open` | A TCP connection was established. |
-| `refused` | The host answered and rejected the connection (nothing listening, or a firewall that actively rejects). |
-| `timeout` | No answer arrived within the timeout. Often a firewall silently dropping packets, or an unreachable host. |
-| `dns_error` | The hostname could not be resolved (including resolver failures and resolver timeouts). |
-| `error` | Any other failure, such as an unreachable network. The error text carries the details. |
+| Status      | Meaning                                                                                                   |
+| ----------- | --------------------------------------------------------------------------------------------------------- |
+| `open`      | A TCP connection was established.                                                                         |
+| `refused`   | The host answered and rejected the connection (nothing listening, or a firewall that actively rejects).   |
+| `timeout`   | No answer arrived within the timeout. Often a firewall silently dropping packets, or an unreachable host. |
+| `dns_error` | The hostname could not be resolved (including resolver failures and resolver timeouts).                   |
+| `error`     | Any other failure, such as an unreachable network. The error text carries the details.                    |
 
 The timeout covers the whole attempt, including DNS resolution. If a host resolves to several addresses, Go may try them in turn within that same timeout. Reported latency is the time until the connection was established or failed, including resolution.
 
@@ -121,14 +121,14 @@ On Windows, connecting to a closed port can take noticeably longer to report `re
 
 ## Exit codes
 
-| Code | Meaning |
-| --- | --- |
-| `0` | All requested checks succeeded. |
-| `1` | One or more connectivity checks failed. |
-| `2` | Invalid arguments, invalid configuration, or another execution error. |
+| Code | Meaning                                                               |
+| ---- | --------------------------------------------------------------------- |
+| `0`  | All requested checks succeeded.                                       |
+| `1`  | One or more connectivity checks failed.                               |
+| `2`  | Invalid arguments, invalid configuration, or another execution error. |
 
 ```bash
-portpeek --timeout 2s db.internal:5432 || echo "database port unreachable"
+port-check --timeout 2s db.internal:5432 || echo "database port unreachable"
 ```
 
 `--help` and `--version` exit with `0`.
@@ -138,7 +138,7 @@ portpeek --timeout 2s db.internal:5432 || echo "database port unreachable"
 `--json` prints one JSON document on stdout, with the same shape for single targets and `check`:
 
 ```console
-$ portpeek --json localhost:8080
+$ port-check --json localhost:8080
 {
   "results": [
     {
@@ -167,16 +167,16 @@ In JSON mode stdout contains only the JSON document. Argument, configuration and
 
 ## Supported operating systems
 
-Linux, macOS and Windows. Portpeek uses only portable standard library networking and contains no platform-specific code besides recognizing the Windows "connection refused" error number.
+Linux, macOS and Windows. port-check uses only portable standard library networking and contains no platform-specific code besides recognizing the Windows "connection refused" error number.
 
 ## Limitations and security considerations
 
 - TCP connectivity only; see [What it does and does not do](#what-it-does-and-does-not-do).
 - Each check opens and immediately closes a real connection. The target service or an intrusion detection system may log it. Only check systems you are allowed to test.
-- Targets come from the command line or the config file. Do not build a service that passes untrusted input to Portpeek: it would let that input probe internal hosts and ports from the machine running it.
+- Targets come from the command line or the config file. Do not build a service that passes untrusted input to port-check: it would let that input probe internal hosts and ports from the machine running it.
 - A middlebox such as a transparent proxy, load balancer or some firewalls can accept TCP connections on behalf of a backend that is down, so `open` does not prove the backend is reachable.
 - `refused` and `timeout` are inferred from operating system errors and are a hint, not proof, of the cause.
-- Portpeek does not read proxy environment variables; it always connects directly.
+- port-check does not read proxy environment variables; it always connects directly.
 
 ## License
 
