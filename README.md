@@ -1,4 +1,4 @@
-# Portpeek
+# port-checker
 
 Portpeek checks whether TCP connections to `host:port` endpoints can be established. It is a single static Go binary with no dependencies beyond the Go standard library, intended for local troubleshooting, shell scripts and CI/CD pipelines.
 
@@ -15,7 +15,7 @@ Not implemented: port range scanning, UDP, HTTP or other application-level check
 Requires Go 1.24 or newer.
 
 ```bash
-git clone <repository-url> portpeek
+git clone https://github.com/Ssajaia/port-checker portpeek
 cd portpeek
 go build -o portpeek .
 ```
